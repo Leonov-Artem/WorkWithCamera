@@ -64,9 +64,6 @@
     <Compile Include="PictureCallback.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SurfaceHolderCallback.cs" />
-    <Compile Include="try1.cs" />
-    <Compile Include="try2.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />

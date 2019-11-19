@@ -19,20 +19,25 @@ namespace WorkWithCamera
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : Activity
     {
-        Button button;
+        Button takePhotoButton;
         Android.Hardware.Camera camera;
+        string[] permissionsToCheck = new string[]
+        {
+            Android.Manifest.Permission.Camera,
+            Android.Manifest.Permission.WriteExternalStorage
+        };
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
-            SuccessfulPermissionCheck();
+            CallNotGrantedPermissions(permissionsToCheck);
 
-            button =  FindViewById<Button>(Resource.Id.btn1);
-            button.Click += Button_Click;          
+            takePhotoButton =  FindViewById<Button>(Resource.Id.btn1);
+            takePhotoButton.Click += TakePhotoButton_Click;          
         }
 
-        private void Button_Click(object sender, EventArgs e)
+        private void TakePhotoButton_Click(object sender, EventArgs e)
         {
             camera = Android.Hardware.Camera.Open();
             try
@@ -44,13 +49,36 @@ namespace WorkWithCamera
                 //Log.e(Version.APP_ID, e1.getMessage());
             }
 
-            Parameters param = camera.GetParameters();
-            param.SetPreviewSize(640, 480);
-            param.FlashMode = (Parameters.FlashModeOff);
-            param.PictureFormat = ImageFormat.Jpeg;
-            camera.SetParameters(param);
+            Parameters newParams = GetModifiedCameraParameters();
+            camera.SetParameters(newParams);
             camera.StartPreview();
             camera.TakePicture(null, null, new PictureCallback());
+        }
+
+        private Parameters GetModifiedCameraParameters()
+        {
+            Parameters param = camera.GetParameters();
+            param.SetPreviewSize(640, 480);
+
+            var sizes = param.SupportedPictureSizes;
+            var size = sizes[0];
+            for (int i = 0; i < sizes.Count; i++)
+            {
+                if (sizes[i].Width > size.Width)
+                    size = sizes[i];
+            }
+
+            param.SetPictureSize(size.Width, size.Height);
+            param.FlashMode = (Parameters.FlashModeOff);
+            param.FocusMode = Parameters.FocusModeContinuousPicture;
+            param.SceneMode = Parameters.SceneModeAuto;
+            param.WhiteBalance = Parameters.WhiteBalanceAuto;
+            param.ExposureCompensation = 0;
+            param.PictureFormat = ImageFormat.Jpeg;
+            param.JpegQuality = 100;
+            param.SetRotation(90);
+
+            return param;
         }
 
         protected override void OnPause()
@@ -68,29 +96,20 @@ namespace WorkWithCamera
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-        private bool SuccessfulPermissionCheck()
+        private void CallNotGrantedPermissions(string[] permissionsToCheck)
         {
             if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
             {
-                var permissionStillNeeded = GetNotGrantedPermissions();
+                var permissionStillNeeded = GetNotGrantedPermissions(permissionsToCheck);
                 if (permissionStillNeeded.Length > 0)
                 {
                     RequestPermissions(permissionStillNeeded, 5);
-                    return false;
                 }
             }
-
-            return true;
         }
 
-        private string[] GetNotGrantedPermissions()
+        private string[] GetNotGrantedPermissions(string[] permissionsToCheck)
         {
-            var permissionsToCheck = new string[]
-            {
-                Android.Manifest.Permission.Camera,
-                Android.Manifest.Permission.WriteExternalStorage
-            };
-
             var permissionStillNeeded = new List<string>();
             for (int i = 0; i < permissionsToCheck.Length; i++)
             {

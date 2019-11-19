@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -14,6 +13,8 @@ using Android.Hardware;
 using Java.IO;
 using Android.Icu.Text;
 using Java.Util;
+using Android.Net;
+using System;
 
 namespace WorkWithCamera
 {
@@ -23,9 +24,10 @@ namespace WorkWithCamera
         {
             File photoFile = GetOutputMediaFile();
             try
-            {
-                FileOutputStream fos = new FileOutputStream(photoFile);
+            { 
+                var fos = new FileOutputStream(photoFile);
                 fos.Write(data);
+
                 fos.Close();
             }
             catch (Exception e)
@@ -36,8 +38,9 @@ namespace WorkWithCamera
 
         private static File GetOutputMediaFile()
         {
-            File pictures = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures);
-            var photoFile = new File(pictures, "myphoto.jpg");
+            File _path = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures);
+            var photoFile = new File(_path, "myphoto.jpg");
+
             return photoFile;
         }
     }

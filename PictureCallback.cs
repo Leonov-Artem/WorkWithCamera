@@ -15,6 +15,7 @@ using Android.Icu.Text;
 using Java.Util;
 using Android.Net;
 using System;
+using Android.Util;
 
 namespace WorkWithCamera
 {
@@ -27,8 +28,8 @@ namespace WorkWithCamera
             { 
                 var fos = new FileOutputStream(photoFile);
                 fos.Write(data);
-
                 fos.Close();
+                Log.Info("MyCamera", "Фото сделано");
             }
             catch (Exception e)
             {

@@ -64,6 +64,7 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraInfo.cs" />
     <Compile Include="HiddenTakingPhotos.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="PictureCallback.cs" />

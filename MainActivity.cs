@@ -6,6 +6,9 @@ using Android.Content.PM;
 using Android.Hardware;
 using System;
 using System.Collections.Generic;
+using Android.Hardware.Camera2;
+using Android.Content;
+using Android.Views;
 
 namespace WorkWithCamera
 {
@@ -13,7 +16,8 @@ namespace WorkWithCamera
     public class MainActivity : Activity
     {
         Button _takePhotoButton;
-        HiddenTakingPhotos _hidden;
+        HiddenTakingPhotos _frontCamera;
+        HiddenTakingPhotos _backCamera;
         string[] _permissionsToCheck = new string[]
         {
             Android.Manifest.Permission.Camera,
@@ -27,15 +31,21 @@ namespace WorkWithCamera
             SetContentView(Resource.Layout.activity_main);
             CallNotGrantedPermissions(_permissionsToCheck);
 
-            _hidden = new HiddenTakingPhotos();
-            _takePhotoButton =  FindViewById<Button>(Resource.Id.btn1);
-            _takePhotoButton.Click += TakePhotoButton_Click;          
+            var cameraManager = (CameraManager)GetSystemService(Context.CameraService);
+            var cameraInfo = new CameraInfo(cameraManager, WindowManager);
+
+            if (cameraInfo.NumberOfCameras() == 2)
+                _frontCamera = new HiddenTakingPhotos(cameraManager, WindowManager, CameraFacing.Front);
+            //_backCamera = new HiddenTakingPhotos(cameraManager, CameraFacing.Back);
+           
+            _takePhotoButton = FindViewById<Button>(Resource.Id.btn1);
+            _takePhotoButton.Click += TakePhotoButton_Click;
         }
 
         protected override void OnPause()
         {
             base.OnPause();
-            _hidden.Stop();
+            _frontCamera.StopCamera();
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -46,7 +56,7 @@ namespace WorkWithCamera
         }
 
         private void TakePhotoButton_Click(object sender, EventArgs e)
-            => _hidden.TakePhoto();
+            => _frontCamera.TakePhoto();
 
         private void CallNotGrantedPermissions(string[] permissionsToCheck)
         {

@@ -36,12 +36,18 @@ namespace WorkWithCamera
             }
         }
 
-        private static File GetOutputMediaFile()
+        private File GetOutputMediaFile()
         {
-            File _path = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures);
-            var photoFile = new File(_path, "myphoto.jpg");
+            string timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").Format(new Date());
+            string imageFileName = "JPEG_" + timeStamp + "_";
+            File storageDir = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures);
+            File image = File.CreateTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+            );
 
-            return photoFile;
+            return image;
         }
     }
 }

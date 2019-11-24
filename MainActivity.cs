@@ -35,8 +35,8 @@ namespace WorkWithCamera
             var cameraInfo = new CameraInfo(cameraManager, WindowManager);
 
             if (cameraInfo.NumberOfCameras() == 2)
-                _frontCamera = new HiddenTakingPhotos(cameraManager, WindowManager, CameraFacing.Front);
-            //_backCamera = new HiddenTakingPhotos(cameraManager, CameraFacing.Back);
+                _frontCamera = new HiddenTakingPhotos(cameraInfo, CameraFacing.Front);
+            _backCamera = new HiddenTakingPhotos(cameraInfo, CameraFacing.Back);
            
             _takePhotoButton = FindViewById<Button>(Resource.Id.btn1);
             _takePhotoButton.Click += TakePhotoButton_Click;
@@ -45,7 +45,9 @@ namespace WorkWithCamera
         protected override void OnPause()
         {
             base.OnPause();
-            _frontCamera.StopCamera();
+            if (_frontCamera != null)
+                _frontCamera.Stop();
+            //_backCamera.Stop();
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -56,7 +58,11 @@ namespace WorkWithCamera
         }
 
         private void TakePhotoButton_Click(object sender, EventArgs e)
-            => _frontCamera.TakePhoto();
+        {
+            if (_frontCamera != null)
+                _frontCamera.TakePhoto();
+           // _backCamera.TakePhoto();
+        }
 
         private void CallNotGrantedPermissions(string[] permissionsToCheck)
         {

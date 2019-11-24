@@ -11,20 +11,17 @@ namespace WorkWithCamera
 {
     public class HiddenTakingPhotos
     {
+        readonly int CAMERA_ID;
+
         CameraInfo _cameraInfo;
         PictureCallback _pictureCallback;
-        Camera.Parameters _newParameters;
         Camera _camera;
-        CameraFacing _cameraFacing;
-        readonly int CAMERA_ID = 0;
-        Android.Views.IWindowManager windowManager;
 
-        public HiddenTakingPhotos(CameraManager cameraManager, Android.Views.IWindowManager windowManager, CameraFacing cameraFacing)
+        public HiddenTakingPhotos(CameraInfo cameraInfo, CameraFacing cameraFacing)
         {
-            this.windowManager = windowManager;
-            _cameraInfo = new CameraInfo(cameraManager);
+            _cameraInfo = cameraInfo;
             _pictureCallback = new PictureCallback();
-            _cameraFacing = cameraFacing;
+            CAMERA_ID = 0; //_cameraInfo.GetID(cameraFacing);
         }
 
         public void TakePhoto()
@@ -33,7 +30,7 @@ namespace WorkWithCamera
                 _camera = GetCamera();
 
             Camera.Parameters oldParameters = _camera.GetParameters();
-            _newParameters = GetModifiedParameters(oldParameters);
+            Camera.Parameters _newParameters = GetModifiedParameters(oldParameters);
 
             _camera.SetPreviewTexture(new Android.Graphics.SurfaceTexture(10));
             _camera.SetParameters(_newParameters);
@@ -41,10 +38,13 @@ namespace WorkWithCamera
             _camera.TakePicture(null, null, _pictureCallback);
         }
 
-        public void StopCamera()
+        public void Stop()
         {
             if (_camera != null)
+            {
+                _camera.StopPreview();
                 _camera.Release();
+            }
             _camera = null;
         }
 
@@ -62,12 +62,13 @@ namespace WorkWithCamera
             newParameters.FlashMode = Camera.Parameters.FlashModeOff;
             newParameters.FocusMode = Camera.Parameters.FocusModeAuto;
             newParameters.SceneMode = Camera.Parameters.SceneModeAuto;
-            newParameters.AutoExposureLock = false;
+            //newParameters.AutoExposureLock = false;
             newParameters.WhiteBalance = Camera.Parameters.WhiteBalanceAuto;
-            newParameters.ExposureCompensation = 12;
+            //newParameters.ExposureCompensation = -12;
             newParameters.PictureFormat = Android.Graphics.ImageFormat.Jpeg;
             newParameters.JpegQuality = 100;
-            newParameters.SetRotation(setCameraDisplayOrientation(CAMERA_ID));
+            int angle = _cameraInfo.CalculateRotationAngle(CAMERA_ID);
+            newParameters.SetRotation(angle);
 
             return newParameters;
         }
@@ -78,46 +79,6 @@ namespace WorkWithCamera
                                     .OrderByDescending(x => x.Width)
                                     .ToArray();
             return orderByDescending[0];
-        }
-
-        int setCameraDisplayOrientation(int cameraId)
-        {
-            // определяем насколько повернут экран от нормального положения
-            SurfaceOrientation rotation = windowManager.DefaultDisplay.Rotation;
-            int degrees = 0;
-            switch (rotation)
-            {
-                case SurfaceOrientation.Rotation0:
-                    degrees = 0;
-                    break;
-                case SurfaceOrientation.Rotation90:
-                    degrees = 90;
-                    break;
-                case SurfaceOrientation.Rotation180:
-                    degrees = 180;
-                    break;
-                case SurfaceOrientation.Rotation270:
-                    degrees = 270;
-                    break;
-            }
-
-            int result = 0;
-
-            // получаем инфо по камере cameraId
-            var info = new Camera.CameraInfo();
-            Camera.GetCameraInfo(CAMERA_ID, info);
-
-            if (info.Facing == Camera.CameraInfo.CameraFacingFront)
-            {
-                result = (info.Orientation + degrees) % 360;
-                result = (360 - result) % 360;  // compensate the mirror
-            }
-            else
-            {  // back-facing
-                result = (info.Orientation - degrees + 360) % 360;
-            }
-
-            return result;
         }
     }
 }
